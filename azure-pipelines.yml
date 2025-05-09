@@ -1,0 +1,38 @@
+trigger: none  # Manual trigger only
+
+parameters:
+  - name: reportDate
+    displayName: 'Report Date (YYYY-MM-DD)'
+    type: string
+    default: ''
+
+variables:
+  AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID)
+  AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)
+  S3_BUCKET_NAME: my-daily-reports-bucket
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+  - task: Bash@3
+    displayName: 'Install AWS CLI'
+    inputs:
+      targetType: 'inline'
+      script: |
+        sudo apt-get update
+        sudo apt-get install -y awscli
+
+  - task: Bash@3
+    displayName: 'Download report.csv from S3 by date'
+    inputs:
+      targetType: 'inline'
+      script: |
+        export AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID)
+        export AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY)
+
+        echo "Downloading report for date: ${{ parameters.reportDate }}"
+
+        aws s3 cp s3://$S3_BUCKET_NAME/reports/${{ parameters.reportDate }}/report.csv report-${{ parameters.reportDate }}.csv
+
+        echo "Download complete: report-${{ parameters.reportDate }}.csv"
