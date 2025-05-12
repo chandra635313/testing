@@ -1,38 +1,24 @@
-trigger: none  # Manual run only
+trigger: none  # Run manually
 
 parameters:
   - name: reportDate
     displayName: 'Report Date (YYYY-MM-DD)'
     type: string
-    default: ''
+    default: '2025-05-06'
 
 variables:
-  AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID)
-  AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)
-  S3_BUCKET_NAME: my-daily-reports-bucket  # Update as needed
+  S3_BUCKET_NAME: appsec-mss-prod-accenturecio-now
 
 pool:
-  name: Default  # Use the self-hosted agent pool
+  vmImage: 'windows-latest'  # ✅ Fixed: Use Microsoft-hosted agent
 
 steps:
-  - task: Bash@3
+  - task: PowerShell@2
     displayName: 'Install AWS CLI'
     inputs:
       targetType: 'inline'
       script: |
-        sudo apt-get update
-        sudo apt-get install -y awscli
-
-  - task: Bash@3
-    displayName: 'Download report.csv from S3 by date'
-    inputs:
-      targetType: 'inline'
-      script: |
-        echo "Downloading report for date: ${{ parameters.reportDate }}"
-
-        export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-        export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-
-        aws s3 cp s3://$S3_BUCKET_NAME/reports/${{ parameters.reportDate }}/report.csv report-${{ parameters.reportDate }}.csv
-
-        echo "Download complete: report-${{ parameters.reportDate }}.csv"
+        Write-Host "Installing AWS CLI..."
+        $Installer = "$env:TEMP\AWSCLIV2.msi"
+        Invoke-WebRequest "https://awscli.amazonaws.com/AWSCLIV2.msi" -OutFile $Installer
+        Start-Process msiexec.exe -ArgumentList "/i `"$Installer
