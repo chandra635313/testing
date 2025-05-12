@@ -1,4 +1,4 @@
-trigger: none  # No automatic trigger, manual run only
+trigger: none  # Manual run only
 
 parameters:
   - name: reportDate
@@ -9,10 +9,10 @@ parameters:
 variables:
   AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID)
   AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)
-  S3_BUCKET_NAME: my-daily-reports-bucket  # Update this with your bucket name
+  S3_BUCKET_NAME: my-daily-reports-bucket  # Update as needed
 
 pool:
-  name: Default  # Use self-hosted agent pool name (usually "Default")
+  name: Default  # Use the self-hosted agent pool
 
 steps:
   - task: Bash@3
