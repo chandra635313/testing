@@ -1,4 +1,4 @@
-trigger: none  # Manual trigger only
+trigger: none  # No automatic trigger, manual run only
 
 parameters:
   - name: reportDate
@@ -9,10 +9,10 @@ parameters:
 variables:
   AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID)
   AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)
-  S3_BUCKET_NAME: my-daily-reports-bucket
+  S3_BUCKET_NAME: my-daily-reports-bucket  # Update this with your bucket name
 
 pool:
-  vmImage: 'ubuntu-latest'
+  name: Default  # Use self-hosted agent pool name (usually "Default")
 
 steps:
   - task: Bash@3
@@ -28,10 +28,10 @@ steps:
     inputs:
       targetType: 'inline'
       script: |
-        export AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID)
-        export AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY)
-
         echo "Downloading report for date: ${{ parameters.reportDate }}"
+
+        export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+        export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
 
         aws s3 cp s3://$S3_BUCKET_NAME/reports/${{ parameters.reportDate }}/report.csv report-${{ parameters.reportDate }}.csv
 
