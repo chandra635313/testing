@@ -1,24 +1,27 @@
-trigger: none  # Run manually
+# azure-pipelines.yml
+# Purpose: Build a Docker image, scan with Trivy, and publish vulnerability report
 
-parameters:
-  - name: reportDate
-    displayName: 'Report Date (YYYY-MM-DD)'
-    type: string
-    default: '2025-05-06'
-
-variables:
-  S3_BUCKET_NAME: appsec-mss-prod-accenturecio-now
+trigger:
+- main   # Change this to your branch name if needed (e.g., 'master' or 'dev')
 
 pool:
-  vmImage: 'windows-latest'  # ✅ Fixed: Use Microsoft-hosted agent
+  vmImage: 'ubuntu-latest'  # Uses Azure-hosted Ubuntu agent
 
 steps:
-  - task: PowerShell@2
-    displayName: 'Install AWS CLI'
-    inputs:
-      targetType: 'inline'
-      script: |
-        Write-Host "Installing AWS CLI..."
-        $Installer = "$env:TEMP\AWSCLIV2.msi"
-        Invoke-WebRequest "https://awscli.amazonaws.com/AWSCLIV2.msi" -OutFile $Installer
-        Start-Process msiexec.exe -ArgumentList "/i `"$Installer
+# -------------------------------
+# Step 1: Check Docker version
+# -------------------------------
+- script: docker --version
+  displayName: "Verify Docker Installation"
+
+# -------------------------------
+# Step 2: Install Trivy
+# -------------------------------
+- script: |
+    sudo apt-get update
+    sudo apt-get install -y wget apt-transport-https gnupg lsb-release
+    wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+    echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee /etc/apt/sources.list.d/trivy.list
+    sudo apt-get update
+    sudo apt-get install -y trivy
+  displayName: "Install Trivy Vulnerability Scanner"
