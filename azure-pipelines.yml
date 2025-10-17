@@ -19,6 +19,7 @@ steps:
       echo "Pulling Docker image: $(IMAGE_NAME):$(IMAGE_TAG)"
       docker pull $(IMAGE_NAME):$(IMAGE_TAG)
 
+# Step 2: Install Trivy
 - task: Bash@3
   displayName: 'Install Trivy'
   inputs:
@@ -29,3 +30,28 @@ steps:
       export PATH=$PATH:$(pwd)/bin
       trivy --version
 
+# Step 3: Scan Docker Image with Trivy
+- task: Bash@3
+  displayName: 'Scan Docker Image with Trivy'
+  inputs:
+    targetType: 'inline'
+    script: |
+      echo "Scanning Docker image: $(IMAGE_NAME):$(IMAGE_TAG) for vulnerabilities..."
+      trivy image --exit-code 1 --severity CRITICAL,HIGH $(IMAGE_NAME):$(IMAGE_TAG)
+
+# Step 4: Scan Docker Image and Save JSON Report
+- task: Bash@3
+  displayName: 'Scan Docker Image and Save Report'
+  inputs:
+    targetType: 'inline'
+    script: |
+      echo "Scanning Docker image and saving report..."
+      trivy image --format json --output trivy-report.json $(IMAGE_NAME):$(IMAGE_TAG)
+
+# Step 5: Publish Trivy Report as Artifact
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Trivy Report'
+  inputs:
+    PathtoPublish: 'trivy-report.json'
+    ArtifactName: 'TrivyReport'
+    publishLocation: 'Container'
