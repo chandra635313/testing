@@ -41,27 +41,21 @@ steps:
       export PATH=$PATH:$(pwd)/bin
       trivy --version
 
-# Step 4: Scan Docker image with Trivy
 - task: Bash@3
-  displayName: 'Scan Docker Image with Trivy'
+  displayName: 'Install and Scan Docker Image with Trivy'
   inputs:
     targetType: 'inline'
     script: |
-      echo "Scanning Docker image: $(IMAGE_NAME):$(IMAGE_TAG)"
-      # Use --exit-code 0 to avoid failing the pipeline; change to 1 if you want it to fail on vulnerabilities
-      trivy image --exit-code 3 --severity HIGH,CRITICAL $(IMAGE_NAME):$(IMAGE_TAG)
+      echo "Installing Trivy..."
+      curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
 
-# Step 5: Save Trivy scan report as JSON and publish
-- task: Bash@3
-  displayName: 'Scan and Save Trivy Report'
-  inputs:
-    targetType: 'inline'
-    script: |
-      trivy image --format json --output trivy-report.json $(IMAGE_NAME):$(IMAGE_TAG)
+      # Add Trivy to PATH
+      export PATH=$PATH:$(pwd)/bin
 
-- task: PublishBuildArtifacts@1
-  displayName: 'Publish Trivy Report'
-  inputs:
-    PathtoPublish: 'trivy-report.json'
-    ArtifactName: 'TrivyReport'
-    publishLocation: 'Container'
+      trivy --version
+
+      echo "Pulling Docker image: nginx:latest"
+      docker pull nginx:latest
+
+      echo "Scanning Docker image for vulnerabilities..."
+      trivy image --exit-code 3 --severity HIGH,CRITICAL nginx:latest
