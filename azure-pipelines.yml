@@ -30,16 +30,6 @@ steps:
       echo "Pulling Docker image: $(IMAGE_NAME):$(IMAGE_TAG)"
       docker pull $(IMAGE_NAME):$(IMAGE_TAG)
 
-# Step 3: Install Trivy
-- task: Bash@3
-  displayName: 'Install Trivy'
-  inputs:
-    targetType: 'inline'
-    script: |
-      echo "Installing Trivy..."
-      curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
-      export PATH=$PATH:$(pwd)/bin
-      trivy --version
 
 - task: Bash@3
   displayName: 'Install and Scan Docker Image with Trivy'
@@ -54,8 +44,9 @@ steps:
 
       trivy --version
 
-      echo "Pulling Docker image: nginx:latest"
-      docker pull tomcat:latest
+      echo "Pulling Docker image: chandra635313/spring-boot-mongo"
+      docker pull chandra635313/spring-boot-mongo
 
       echo "Scanning Docker image for vulnerabilities..."
-      trivy image --exit-code 0 --severity HIGH,CRITICAL tomcat:latest
+      trivy image --exit-code 0 --severity HIGH,CRITICAL chandra635313/spring-boot-mongo
+
