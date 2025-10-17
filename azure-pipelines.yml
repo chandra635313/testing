@@ -1,27 +1,55 @@
-# azure-pipelines.yml
-# Purpose: Build a Docker image, scan with Trivy, and publish vulnerability report
-
 trigger:
-- main   # Change this to your branch name if needed (e.g., 'master' or 'dev')
+- main  # Trigger pipeline on changes to main branch
 
 pool:
-  vmImage: 'ubuntu-latest'  # Uses Azure-hosted Ubuntu agent
+  vmImage: 'ubuntu-latest'  # Use Ubuntu agent
+
+variables:
+  IMAGE_NAME: 'nginx'        # Docker image name
+  IMAGE_TAG: 'latest'        # Docker image tag
 
 steps:
-# -------------------------------
-# Step 1: Check Docker version
-# -------------------------------
-- script: docker --version
-  displayName: "Verify Docker Installation"
 
-# -------------------------------
+# Step 1: Pull Docker Image
+- task: Bash@3
+  displayName: 'Pull Docker Image'
+  inputs:
+    targetType: 'inline'
+    script: |
+      echo "Pulling Docker image: $(IMAGE_NAME):$(IMAGE_TAG)"
+      docker pull $(IMAGE_NAME):$(IMAGE_TAG)
+
 # Step 2: Install Trivy
-# -------------------------------
-- script: |
-    sudo apt-get update
-    sudo apt-get install -y wget apt-transport-https gnupg lsb-release
-    wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
-    echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee /etc/apt/sources.list.d/trivy.list
-    sudo apt-get update
-    sudo apt-get install -y trivy
-  displayName: "Install Trivy Vulnerability Scanner"
+- task: Bash@3
+  displayName: 'Install Trivy'
+  inputs:
+    targetType: 'inline'
+    script: |
+      echo "Installing Trivy..."
+      curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
+      trivy --version
+
+# Step 3: Scan Docker Image with Trivy
+- task: Bash@3
+  displayName: 'Scan Docker Image with Trivy'
+  inputs:
+    targetType: 'inline'
+    script: |
+      echo "Scanning Docker image: $(IMAGE_NAME):$(IMAGE_TAG) for vulnerabilities..."
+      trivy image --exit-code 1 --severity CRITICAL,HIGH $(IMAGE_NAME):$(IMAGE_TAG)
+
+# Optional Step 4: Scan and Save Report as Artifact (JSON)
+- task: Bash@3
+  displayName: 'Scan Docker Image and Save Report'
+  inputs:
+    targetType: 'inline'
+    script: |
+      echo "Scanning Docker image and saving report..."
+      trivy image --format json --output trivy-report.json $(IMAGE_NAME):$(IMAGE_TAG)
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Trivy Report'
+  inputs:
+    PathtoPublish: 'trivy-report.json'
+    ArtifactName: 'TrivyReport'
+    publishLocation: 'Container'
