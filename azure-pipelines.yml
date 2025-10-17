@@ -55,7 +55,7 @@ steps:
       trivy --version
 
       echo "Pulling Docker image: nginx:latest"
-      docker pull nginx:latest
+      docker pull tomcat:latest
 
       echo "Scanning Docker image for vulnerabilities..."
       trivy image --exit-code 0 --severity HIGH,CRITICAL nginx:latest
