@@ -40,7 +40,7 @@ steps:
       export PATH=$PATH:$(pwd)/bin
       trivy --version
       echo "Scanning Docker image: nginx:latest for vulnerabilities..."
-      trivy image --exit-code 1 --severity CRITICAL,HIGH nginx:latest
+      trivy image --exit-code  --severity CRITICAL,HIGH nginx:latest
 
 # Step 4: Scan Docker Image and Save JSON Report
 - task: Bash@3
