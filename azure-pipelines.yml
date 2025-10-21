@@ -31,7 +31,7 @@ steps:
       echo "Pulling Docker image: chandra635313/spring-boot-mongo:latest"
       docker pull chandra635313/spring-boot-mongo:latest
 
-# Step 3: Install and Scan Docker Image with Trivy
+# Step 3: Install Trivy and Scan Docker Image
 - task: Bash@3
   displayName: 'Scan Docker Image with Trivy'
   inputs:
@@ -39,11 +39,18 @@ steps:
     script: |
       echo "Installing Trivy..."
       curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
-
-      echo "Adding Trivy to PATH..."
       export PATH=$PATH:$(pwd)/bin
-
       trivy --version
 
-      echo "Scanning Docker image for vulnerabilities..."
-      trivy image --exit-code 0 --severity HIGH,CRITICAL chandra635313/spring-boot-mongo:latest
+      echo "Running Trivy scan and saving report..."
+      trivy image --format html --output trivy-report.html chandra635313/spring-boot-mongo:latest
+
+      echo "Scan complete. Report generated: trivy-report.html"
+
+# Step 4: Publish Trivy Scan Report
+- task: PublishPipelineArtifact@1
+  displayName: 'Publish Trivy Scan Report'
+  inputs:
+    targetPath: 'trivy-report.html'
+    artifact: 'TrivyReport'
+    publishLocation: 'pipeline'
