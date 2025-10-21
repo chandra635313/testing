@@ -5,20 +5,25 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-  IMAGE_NAME: 'tomcat'
+  IMAGE_NAME: 'chandra635313/spring-boot-mongo'
   IMAGE_TAG: 'latest'
 
 steps:
 
-# Step 1: Install Docker (Ubuntu agents usually have Docker, but just in case)
+# Step 1: Ensure Docker is available
 - task: Bash@3
-  displayName: 'Install Docker'
+  displayName: 'Verify Docker Installation'
   inputs:
     targetType: 'inline'
     script: |
-      echo "Installing Docker..."
-      sudo apt-get update
-      sudo apt-get install -y docker.io
+      echo "Checking Docker installation..."
+      if ! command -v docker &> /dev/null; then
+        echo "Docker not found. Installing Docker..."
+        sudo apt-get update
+        sudo apt-get install -y docker.io
+      else
+        echo "Docker is already installed."
+      fi
       docker --version
 
 # Step 2: Pull Docker image
@@ -30,23 +35,19 @@ steps:
       echo "Pulling Docker image: $(IMAGE_NAME):$(IMAGE_TAG)"
       docker pull $(IMAGE_NAME):$(IMAGE_TAG)
 
-
+# Step 3: Install and Run Trivy Scan
 - task: Bash@3
-  displayName: 'Install and Scan Docker Image with Trivy'
+  displayName: 'Scan Docker Image with Trivy'
   inputs:
     targetType: 'inline'
     script: |
       echo "Installing Trivy..."
       curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
 
-      # Add Trivy to PATH
+      echo "Adding Trivy to PATH..."
       export PATH=$PATH:$(pwd)/bin
 
       trivy --version
 
-      echo "Pulling Docker image: chandra635313/spring-boot-mongo"
-      docker pull chandra635313/spring-boot-mongo
-
       echo "Scanning Docker image for vulnerabilities..."
-      trivy image --exit-code 0 --severity HIGH,CRITICAL chandra635313/spring-boot-mongo
-
+      trivy image --exit-code 0 --severity HIGH,CRITICAL $(IMAGE_NAME):$(IMAGE_TAG)
