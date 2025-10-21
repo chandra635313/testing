@@ -4,10 +4,6 @@ trigger:
 pool:
   vmImage: 'ubuntu-latest'
 
-variables:
-  IMAGE_NAME: 'chandra635313/spring-boot-mongo'
-  IMAGE_TAG: 'latest'
-
 steps:
 
 # Step 1: Ensure Docker is available
@@ -26,16 +22,16 @@ steps:
       fi
       docker --version
 
-# Step 2: Pull Docker image
+# Step 2: Pull Docker Image
 - task: Bash@3
   displayName: 'Pull Docker Image'
   inputs:
     targetType: 'inline'
     script: |
-      echo "Pulling Docker image: $(IMAGE_NAME):$(IMAGE_TAG)"
-      docker pull $(IMAGE_NAME):$(IMAGE_TAG)
+      echo "Pulling Docker image: chandra635313/spring-boot-mongo:latest"
+      docker pull chandra635313/spring-boot-mongo:latest
 
-# Step 3: Install and Run Trivy Scan
+# Step 3: Install and Scan Docker Image with Trivy
 - task: Bash@3
   displayName: 'Scan Docker Image with Trivy'
   inputs:
@@ -50,4 +46,4 @@ steps:
       trivy --version
 
       echo "Scanning Docker image for vulnerabilities..."
-      trivy image --exit-code 0 --severity HIGH,CRITICAL $(IMAGE_NAME):$(IMAGE_TAG)
+      trivy image --exit-code 0 --severity HIGH,CRITICAL chandra635313/spring-boot-mongo:latest
