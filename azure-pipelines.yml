@@ -42,15 +42,17 @@ steps:
       export PATH=$PATH:$(pwd)/bin
       trivy --version
 
-      echo "Running Trivy scan and saving report..."
-      trivy image --format html --output trivy-report.html chandra635313/spring-boot-mongo:latest
+      mkdir -p $(System.DefaultWorkingDirectory)/trivy-reports
 
-      echo "Scan complete. Report generated: trivy-report.html"
+      echo "Running Trivy scan and saving report..."
+      trivy image --format html --output $(System.DefaultWorkingDirectory)/trivy-reports/trivy-report.html chandra635313/spring-boot-mongo:latest
+
+      echo "Scan complete. Report generated in: $(System.DefaultWorkingDirectory)/trivy-reports"
 
 # Step 4: Publish Trivy Scan Report
 - task: PublishPipelineArtifact@1
   displayName: 'Publish Trivy Scan Report'
   inputs:
-    targetPath: 'trivy-report.html'
+    targetPath: '$(System.DefaultWorkingDirectory)/trivy-reports'
     artifact: 'TrivyReport'
     publishLocation: 'pipeline'
